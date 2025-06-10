@@ -6,6 +6,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class LoopDetected(HTTPException):
+    code = 508
+    description = 'Loop Detected'
+
 def register_error_handlers(app):
     """Register error handlers for the Flask application"""
     
@@ -117,11 +121,11 @@ def register_error_handlers(app):
             'status_code': 504
         }), 504
 
-    @app.errorhandler(508)
+    @app.errorhandler(LoopDetected)
     def infinite_loop_error(error):
         logger.error(f"Infinite Loop Detected: {str(error)}")
         return jsonify({
-            'error': 'Infinite Loop Detected',
+            'error': 'Loop Detected',
             'message': str(error),
             'status_code': 508
         }), 508
