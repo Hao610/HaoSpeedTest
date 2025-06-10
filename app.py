@@ -19,8 +19,11 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-app.config['DEBUG'] = True  # Enable debug mode for development
+app.config['DEBUG'] = False  # Disable debug mode in production
 app.config['SOCKETIO_ASYNC_MODE'] = 'gevent'
+app.config['SOCKETIO_PING_TIMEOUT'] = 60
+app.config['SOCKETIO_PING_INTERVAL'] = 25
+app.config['SOCKETIO_MAX_HTTP_BUFFER_SIZE'] = 1e8
 
 # Security configurations
 Talisman(app,
@@ -51,7 +54,10 @@ socketio = SocketIO(app,
     cors_allowed_origins="*",
     async_mode='gevent',
     ping_timeout=60,
-    ping_interval=25
+    ping_interval=25,
+    max_http_buffer_size=1e8,
+    logger=True,
+    engineio_logger=True
 )
 
 # Store active rooms with enhanced security
