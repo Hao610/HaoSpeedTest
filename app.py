@@ -9,6 +9,88 @@ import secrets
 import logging
 from datetime import datetime, timedelta
 from error_handlers import register_error_handlers
+import speedtest
+import socket
+import requests
+import time
+import random
+import threading
+import queue
+from werkzeug.exceptions import HTTPException
+import geocoder
+import psutil
+import platform
+import subprocess
+import re
+from typing import Dict, Any, Optional, List, Tuple
+import concurrent.futures
+from functools import lru_cache
+import aiohttp
+import asyncio
+from aiohttp import ClientTimeout
+import ssl
+import certifi
+import dns.resolver
+from urllib.parse import urlparse
+import netifaces
+import speedtest_cli
+from speedtest_cli import Speedtest
+import speedtest_servers
+from speedtest_servers import get_best_server, get_servers
+import speedtest_results
+from speedtest_results import SpeedtestResults
+import speedtest_config
+from speedtest_config import SpeedtestConfig
+import speedtest_utils
+from speedtest_utils import format_speed, format_size, format_time
+import speedtest_exceptions
+from speedtest_exceptions import SpeedtestError, SpeedtestHTTPError, SpeedtestConfigError, SpeedtestBestServerFailure, SpeedtestResultsError
+import speedtest_logger
+from speedtest_logger import setup_logger, get_logger
+import speedtest_constants
+from speedtest_constants import SPEEDTEST_SERVERS, SPEEDTEST_CONFIG, SPEEDTEST_RESULTS, SPEEDTEST_ERRORS
+import speedtest_types
+from speedtest_types import Server, Config, Results, Error
+import speedtest_validation
+from speedtest_validation import validate_server, validate_config, validate_results
+import speedtest_serialization
+from speedtest_serialization import serialize_server, serialize_config, serialize_results
+import speedtest_deserialization
+from speedtest_deserialization import deserialize_server, deserialize_config, deserialize_results
+import speedtest_cache
+from speedtest_cache import cache_server, cache_config, cache_results, get_cached_server, get_cached_config, get_cached_results
+import speedtest_network
+from speedtest_network import get_network_info, get_network_speed, get_network_latency, get_network_jitter, get_network_packet_loss, get_network_buffer_bloat, get_network_dns_latency
+import speedtest_location
+from speedtest_location import get_location, get_location_info, get_location_coordinates, get_location_city, get_location_country, get_location_region, get_location_timezone
+import speedtest_servers
+from speedtest_servers import get_servers, get_best_server, get_server_info, get_server_distance, get_server_latency, get_server_speed, get_server_jitter, get_server_packet_loss, get_server_buffer_bloat, get_server_dns_latency
+import speedtest_results
+from speedtest_results import get_results, get_results_info, get_results_speed, get_results_latency, get_results_jitter, get_results_packet_loss, get_results_buffer_bloat, get_results_dns_latency
+import speedtest_config
+from speedtest_config import get_config, get_config_info, get_config_speed, get_config_latency, get_config_jitter, get_config_packet_loss, get_config_buffer_bloat, get_config_dns_latency
+import speedtest_utils
+from speedtest_utils import format_speed, format_size, format_time, format_latency, format_jitter, format_packet_loss, format_buffer_bloat, format_dns_latency
+import speedtest_exceptions
+from speedtest_exceptions import SpeedtestError, SpeedtestHTTPError, SpeedtestConfigError, SpeedtestBestServerFailure, SpeedtestResultsError
+import speedtest_logger
+from speedtest_logger import setup_logger, get_logger
+import speedtest_constants
+from speedtest_constants import SPEEDTEST_SERVERS, SPEEDTEST_CONFIG, SPEEDTEST_RESULTS, SPEEDTEST_ERRORS
+import speedtest_types
+from speedtest_types import Server, Config, Results, Error
+import speedtest_validation
+from speedtest_validation import validate_server, validate_config, validate_results
+import speedtest_serialization
+from speedtest_serialization import serialize_server, serialize_config, serialize_results
+import speedtest_deserialization
+from speedtest_deserialization import deserialize_server, deserialize_config, deserialize_results
+import speedtest_cache
+from speedtest_cache import cache_server, cache_config, cache_results, get_cached_server, get_cached_config, get_cached_results
+import speedtest_network
+from speedtest_network import get_network_info, get_network_speed, get_network_latency, get_network_jitter, get_network_packet_loss, get_network_buffer_bloat, get_network_dns_latency
+import speedtest_location
+from speedtest_location import get_location, get_location_info, get_location_coordinates, get_location_city, get_location_country, get_location_region, get_location_timezone
 
 # Configure logging
 logging.basicConfig(
@@ -67,6 +149,75 @@ MAX_ROOMS_PER_IP = 5
 
 # Register error handlers
 app = register_error_handlers(app)
+
+# Initialize speedtest
+st = Speedtest()
+st.get_best_server()
+
+def get_accurate_location():
+    """Get accurate location using multiple methods"""
+    try:
+        # Try IP-based geolocation first
+        g = geocoder.ip('me')
+        if g.ok:
+            return {
+                'latitude': g.lat,
+                'longitude': g.lng,
+                'city': g.city,
+                'country': g.country,
+                'region': g.state,
+                'timezone': g.timezone
+            }
+        
+        # Fallback to system network information
+        network_info = get_network_info()
+        if network_info and 'location' in network_info:
+            return network_info['location']
+            
+        return None
+    except Exception as e:
+        app.logger.error(f"Error getting location: {str(e)}")
+        return None
+
+def run_speed_test():
+    """Run a more accurate speed test"""
+    try:
+        # Get best server
+        server = st.get_best_server()
+        
+        # Test download speed with multiple threads
+        download_speed = st.download(threads=4)
+        
+        # Test upload speed with multiple threads
+        upload_speed = st.upload(threads=4)
+        
+        # Get ping
+        ping = st.results.ping
+        
+        # Get additional metrics
+        jitter = st.results.jitter
+        packet_loss = st.results.packet_loss
+        buffer_bloat = st.results.buffer_bloat
+        dns_latency = st.results.dns_latency
+        
+        return {
+            'download': round(download_speed / 1000000, 2),  # Convert to Mbps
+            'upload': round(upload_speed / 1000000, 2),      # Convert to Mbps
+            'ping': round(ping, 2),
+            'jitter': round(jitter, 2),
+            'packet_loss': round(packet_loss, 2),
+            'buffer_bloat': round(buffer_bloat, 2),
+            'dns_latency': round(dns_latency, 2),
+            'server': {
+                'name': server['name'],
+                'country': server['country'],
+                'distance': round(server['distance'], 2),
+                'latency': round(server['latency'], 2)
+            }
+        }
+    except Exception as e:
+        app.logger.error(f"Error running speed test: {str(e)}")
+        return None
 
 @app.route('/')
 @limiter.limit("30 per minute")
@@ -254,6 +405,22 @@ def test_status():
     except Exception as e:
         logger.error(f"Error checking status: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/get-location')
+def get_location():
+    """Get accurate location information"""
+    location = get_accurate_location()
+    if location:
+        return jsonify(location)
+    return jsonify({'error': 'Could not determine location'}), 500
+
+@app.route('/speed-test')
+def speed_test():
+    """Run a comprehensive speed test"""
+    results = run_speed_test()
+    if results:
+        return jsonify(results)
+    return jsonify({'error': 'Speed test failed'}), 500
 
 if __name__ == '__main__':
     try:
