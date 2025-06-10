@@ -1,4 +1,4 @@
-from flask import jsonify, render_template
+from flask import jsonify, render_template, request
 from werkzeug.exceptions import HTTPException, default_exceptions
 import logging
 
@@ -26,8 +26,7 @@ def register_error_handlers(app):
         logger.error(f"Bad Request: {str(error)}")
         return jsonify({
             'error': 'Bad Request',
-            'message': str(error),
-            'status_code': 400
+            'message': str(error)
         }), 400
 
     @app.errorhandler(401)
@@ -35,8 +34,7 @@ def register_error_handlers(app):
         logger.error(f"Unauthorized: {str(error)}")
         return jsonify({
             'error': 'Unauthorized',
-            'message': str(error),
-            'status_code': 401
+            'message': str(error)
         }), 401
 
     @app.errorhandler(402)
@@ -44,8 +42,7 @@ def register_error_handlers(app):
         logger.error(f"Payment Required: {str(error)}")
         return jsonify({
             'error': 'Payment Required',
-            'message': str(error),
-            'status_code': 402
+            'message': str(error)
         }), 402
 
     @app.errorhandler(403)
@@ -53,8 +50,7 @@ def register_error_handlers(app):
         logger.error(f"Forbidden: {str(error)}")
         return jsonify({
             'error': 'Forbidden',
-            'message': str(error),
-            'status_code': 403
+            'message': str(error)
         }), 403
 
     @app.errorhandler(404)
@@ -62,8 +58,7 @@ def register_error_handlers(app):
         logger.error(f"Not Found: {str(error)}")
         return jsonify({
             'error': 'Not Found',
-            'message': str(error),
-            'status_code': 404
+            'message': str(error)
         }), 404
 
     @app.errorhandler(405)
@@ -71,8 +66,7 @@ def register_error_handlers(app):
         logger.error(f"Method Not Allowed: {str(error)}")
         return jsonify({
             'error': 'Method Not Allowed',
-            'message': str(error),
-            'status_code': 405
+            'message': str(error)
         }), 405
 
     @app.errorhandler(413)
@@ -107,8 +101,7 @@ def register_error_handlers(app):
         logger.error(f"Internal Server Error: {str(error)}")
         return jsonify({
             'error': 'Internal Server Error',
-            'message': str(error),
-            'status_code': 500
+            'message': str(error)
         }), 500
 
     @app.errorhandler(502)
@@ -125,8 +118,7 @@ def register_error_handlers(app):
         logger.error(f"Service Unavailable: {str(error)}")
         return jsonify({
             'error': 'Service Unavailable',
-            'message': str(error),
-            'status_code': 503
+            'message': str(error)
         }), 503
 
     @app.errorhandler(504)
@@ -138,13 +130,12 @@ def register_error_handlers(app):
             'status_code': 504
         }), 504
 
-    @app.errorhandler(LoopDetected)
+    @app.errorhandler(508)
     def infinite_loop_error(error):
-        logger.error(f"Infinite Loop Detected: {str(error)}")
+        logger.error(f"Loop Detected: {str(error)}")
         return jsonify({
             'error': 'Loop Detected',
-            'message': str(error),
-            'status_code': 508
+            'message': str(error)
         }), 508
 
     @app.errorhandler(Exception)
@@ -154,13 +145,11 @@ def register_error_handlers(app):
         if isinstance(error, HTTPException):
             return jsonify({
                 'error': error.name,
-                'message': error.description,
-                'status_code': error.code
+                'message': error.description
             }), error.code
         return jsonify({
             'error': 'Internal Server Error',
-            'message': str(error),
-            'status_code': 500
+            'message': str(error)
         }), 500
 
     # Custom error handler for deployment-related errors
