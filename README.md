@@ -1,48 +1,25 @@
-# HaoSpeedTest - Free Cross-Network Speed Testing
+# HaoSpeedTest
 
-A free, open-source speed testing tool that allows users to test network speeds between devices across different networks without requiring third-party apps.
+A comprehensive network speed testing and analysis tool with a modern web interface.
 
 ## Features
 
+- Real-time network speed testing
+- Detailed network diagnostics
 - Cross-network speed testing
-- No third-party apps required
-- Real-time connection status
-- Beautiful, modern UI
-- Free hosting options
+- Network topology visualization
+- AI-powered insights
+- Modern, responsive UI
 
-## Free Hosting Options
-
-### Option 1: GitHub Pages + Render.com (Recommended)
-
-1. Fork this repository to your GitHub account
-2. Create a new repository on GitHub
-3. Push the code to your repository
-4. Go to [Render.com](https://render.com) and create a free account
-5. Create a new Web Service and connect it to your GitHub repository
-6. Set the following environment variables:
-   - `PYTHON_VERSION`: 3.9.0
-   - `PORT`: 8080
-7. Deploy the service
-8. Your app will be available at `https://your-app-name.onrender.com`
-
-### Option 2: PythonAnywhere (Alternative)
-
-1. Create a free account on [PythonAnywhere](https://www.pythonanywhere.com)
-2. Create a new web app
-3. Upload the code to your PythonAnywhere account
-4. Set up a virtual environment and install requirements
-5. Configure the web app to use your code
-6. Your app will be available at `https://your-username.pythonanywhere.com`
-
-## Local Development
+## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/haospeedtest.git
-cd haospeedtest
+git clone https://github.com/Hao610/HaoSpeedTest.git
+cd HaoSpeedTest
 ```
 
-2. Create a virtual environment:
+2. Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -53,30 +30,38 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Run the development server:
+## Usage
+
+1. Start the application:
 ```bash
 python app.py
 ```
 
-5. Open http://localhost:5000 in your browser
+2. Open your browser and navigate to:
+```
+http://localhost:5000
+```
 
-## Usage
+## Development
 
-1. Open the website on both devices
-2. On Device 1:
-   - Click "Create New Room"
-   - Copy the generated link
-   - Share the link with Device 2
+- Python 3.9+
+- Flask
+- Flask-SocketIO
+- Eventlet
+- Other dependencies listed in requirements.txt
 
-3. On Device 2:
-   - Open the shared link
-   - Wait for connection to establish
-   - Start speed test when ready
+## Deployment
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+The application is configured for deployment on Render. See `render.yaml` for configuration details.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
