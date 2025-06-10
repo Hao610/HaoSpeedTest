@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HaoSpeedTest
 
 A comprehensive network speed testing and analysis tool with a modern web interface.
@@ -65,3 +66,6 @@ MIT License
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+=======
+# HaoSpeedTest
+>>>>>>> 0ba6e8dce41e04a82ca12c936d94d3efbd41fe49
