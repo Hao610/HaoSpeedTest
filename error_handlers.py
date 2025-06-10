@@ -1,5 +1,5 @@
 from flask import jsonify, render_template
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, default_exceptions
 import logging
 
 # Configure logging
@@ -13,6 +13,10 @@ class LoopDetected(HTTPException):
 class PaymentRequired(HTTPException):
     code = 402
     description = 'Payment Required'
+
+# Register custom exceptions with Flask's default exceptions
+default_exceptions[402] = PaymentRequired
+default_exceptions[508] = LoopDetected
 
 def register_error_handlers(app):
     """Register error handlers for the Flask application"""
