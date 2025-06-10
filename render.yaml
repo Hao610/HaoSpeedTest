@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: haospeedtest
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PORT
+        value: 5000
+    healthCheckPath: /
+    autoDeploy: true 
