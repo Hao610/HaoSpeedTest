@@ -84,18 +84,19 @@
             position: relative;
             overflow: hidden;
             animation: float 6s ease-in-out infinite;
+            margin: 2rem auto;
         }
 
         .logo-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
+            position: relative;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-top: 1rem;
         }
 
         .logo {
             width: 200px;
-            height: 50px;
+            height: auto;
             filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.3));
             transition: transform 0.3s ease;
         }
@@ -111,6 +112,7 @@
             margin-bottom: 2rem;
             background: var(--gradient-1);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
             position: relative;
@@ -128,6 +130,7 @@
             white-space: nowrap;
             letter-spacing: 3px;
             text-transform: uppercase;
+            margin-top: 0.5rem;
         }
 
         .server-selector {
@@ -138,6 +141,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .server-selector:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.2);
         }
 
         .server-list {
@@ -154,27 +163,41 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .server-item:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 242, 254, 0.1);
+            border-color: var(--primary-color);
         }
 
         .server-item.selected {
             border-color: var(--primary-color);
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+            background: rgba(0, 242, 254, 0.05);
         }
 
         .server-name {
             font-weight: bold;
             color: var(--text-primary);
             margin-bottom: 0.5rem;
+            font-size: 1.1rem;
         }
 
         .server-latency {
             font-size: 0.9rem;
             color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .server-latency i {
+            color: var(--primary-color);
         }
 
         .metric-card {
@@ -187,28 +210,21 @@
             position: relative;
             overflow: hidden;
             animation: pulse 4s ease-in-out infinite;
-        }
-
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-
-        .metric-card:hover::before {
-            transform: translateX(100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .metric-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 242, 254, 0.2);
-            animation: glow 2s infinite;
+        }
+
+        .metric-card i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
         }
 
         .speed-value {
@@ -217,6 +233,7 @@
             margin: 1rem 0;
             background: var(--gradient-1);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
             font-family: 'Courier New', monospace;
@@ -327,6 +344,10 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             box-shadow: 0 5px 15px rgba(0, 242, 254, 0.3);
+            width: 100%;
+            max-width: 300px;
+            margin: 2rem auto;
+            display: block;
         }
 
         .btn-start:hover {
@@ -339,6 +360,10 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        .btn-start i {
+            margin-right: 0.5rem;
         }
 
         .status-text {
@@ -677,14 +702,62 @@
         @media (max-width: 768px) {
             .speed-test-container {
                 padding: 1rem;
+                margin: 1rem;
+                width: auto;
             }
             
             .title {
                 font-size: 2rem;
+                margin-top: 0;
             }
-            
+
+            .title::after {
+                font-size: 0.8rem;
+                letter-spacing: 2px;
+            }
+
+            .logo {
+                width: 150px;
+            }
+
             .metric-card {
                 margin-bottom: 1rem;
+            }
+
+            .speed-value {
+                font-size: 2.5rem;
+            }
+
+            .metric-label {
+                font-size: 1rem;
+            }
+
+            .btn-start {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+
+            .server-item {
+                padding: 0.8rem;
+            }
+
+            .server-name {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .speed-value {
+                font-size: 2rem;
+            }
+
+            .btn-start {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
             }
         }
 
@@ -853,7 +926,7 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="metric-card">
-                    <i class="fas fa-download icon"></i>
+                    <i class="fas fa-download"></i>
                     <h3 class="metric-label">Download</h3>
                     <div class="speed-value" id="download">0</div>
                     <p class="metric-unit">Mbps</p>
@@ -865,7 +938,7 @@
             </div>
             <div class="col-md-4">
                 <div class="metric-card">
-                    <i class="fas fa-upload icon"></i>
+                    <i class="fas fa-upload"></i>
                     <h3 class="metric-label">Upload</h3>
                     <div class="speed-value" id="upload">0</div>
                     <p class="metric-unit">Mbps</p>
@@ -877,7 +950,7 @@
             </div>
             <div class="col-md-4">
                 <div class="metric-card">
-                    <i class="fas fa-tachometer-alt icon"></i>
+                    <i class="fas fa-tachometer-alt"></i>
                     <h3 class="metric-label">Ping</h3>
                     <div class="speed-value" id="ping">0</div>
                     <p class="metric-unit">ms</p>
@@ -964,49 +1037,6 @@
             </div>
         </div>
 
-        <div class="device-test">
-            <h3 class="metric-label">Cross-Network Speed Test</h3>
-            <div class="connection-setup">
-                <div class="setup-step">
-                    <h4>Create or Join a Test Room</h4>
-                    <div class="room-actions">
-                        <button class="btn btn-start" id="create-room" onclick="createRoom()">
-                            <i class="fas fa-plus me-2"></i>Create New Room
-                        </button>
-                        <div class="room-divider">or</div>
-                        <button class="btn btn-start" id="join-room" onclick="joinRoom()">
-                            <i class="fas fa-sign-in-alt me-2"></i>Join Existing Room
-                        </button>
-                    </div>
-                </div>
-                <div id="room-info" class="room-info" style="display: none;">
-                    <div class="room-link">
-                        <h4>Share this link with the other device:</h4>
-                        <div class="link-container">
-                            <input type="text" id="room-link" class="form-control" readonly>
-                            <button class="btn btn-copy" onclick="copyRoomLink()">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="room-status">
-                        <div class="status-indicator">
-                            <span class="status-dot"></span>
-                            <span class="status-text">Waiting for connection...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="device-list" id="device-list" style="display: none;">
-                <!-- Device items will be added dynamically -->
-            </div>
-            <div class="text-center mt-4">
-                <button class="btn btn-start" id="start-device-test" onclick="startDeviceTest()" style="display: none;">
-                    <i class="fas fa-network-wired me-2"></i>Start Speed Test
-                </button>
-            </div>
-        </div>
-
         <div class="ai-insights">
             <h3 class="metric-label">AI-Powered Insights</h3>
             <div id="insights-container">
@@ -1026,11 +1056,9 @@
 
         <div class="status-text" id="status">Ready to analyze network performance</div>
         
-        <div class="text-center">
-            <button class="btn btn-start" id="start-test" onclick="startTest()">
-                <i class="fas fa-play me-2"></i>Start Analysis
-            </button>
-        </div>
+        <button class="btn btn-start" id="start-test" onclick="startTest()">
+            <i class="fas fa-play"></i>Start Analysis
+        </button>
 
         <div class="loading-animation" id="loading"></div>
     </div>
@@ -1062,7 +1090,10 @@
                 serverItem.className = 'server-item' + (index === 0 ? ' selected' : '');
                 serverItem.innerHTML = `
                     <div class="server-name">${server.name}</div>
-                    <div class="server-latency">${server.latency}</div>
+                    <div class="server-latency">
+                        <i class="fas fa-bolt"></i>
+                        ${server.latency}
+                    </div>
                 `;
                 serverItem.onclick = () => selectServer(index);
                 serverList.appendChild(serverItem);
@@ -1217,661 +1248,6 @@
                     Math.floor(Math.random() * 30) + ' ms';
             }
         }, 5000);
-
-        // Enhanced network type detection with security testing
-        function detectNetworkType() {
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            let networkType = 'Unknown';
-            let networkDetails = '';
-            let securityInfo = {
-                type: 'Unknown',
-                strength: 'Unknown',
-                encryption: 'Unknown',
-                vulnerabilities: []
-            };
-
-            // Try to detect network type using multiple methods
-            if (connection) {
-                if (connection.type) {
-                    switch(connection.type) {
-                        case 'wifi':
-                            networkType = 'WiFi';
-                            // Enhanced WiFi detection
-                            if (connection.effectiveType === '4g') {
-                                networkType = 'WiFi 6E';
-                            } else if (connection.downlink >= 1000) {
-                                networkType = 'WiFi 6';
-                            } else if (connection.downlink >= 500) {
-                                networkType = 'WiFi 5';
-                            } else {
-                                networkType = 'WiFi 4';
-                            }
-                            break;
-                        case 'cellular':
-                            if (connection.effectiveType === '5g') {
-                                networkType = '5G';
-                            } else if (connection.effectiveType === '4g') {
-                                networkType = '4G LTE';
-                            } else if (connection.effectiveType === '3g') {
-                                networkType = '3G';
-                            } else {
-                                networkType = '2G';
-                            }
-                            break;
-                        case 'ethernet':
-                            networkType = 'Ethernet';
-                            if (connection.downlink >= 1000) {
-                                networkDetails = 'Gigabit';
-                            } else if (connection.downlink >= 100) {
-                                networkDetails = 'Fast Ethernet';
-                            } else {
-                                networkDetails = 'Standard';
-                            }
-                            break;
-                        case 'bluetooth':
-                            networkType = 'Bluetooth';
-                            break;
-                        case 'none':
-                            networkType = 'No Connection';
-                            break;
-                    }
-                }
-            }
-
-            // Enhanced network type detection using additional methods
-            if (networkType === 'Unknown') {
-                // Check for WiFi using SSID (if available)
-                if (window.navigator.connection && window.navigator.connection.ssid) {
-                    networkType = 'WiFi';
-                    networkDetails = `SSID: ${window.navigator.connection.ssid}`;
-                }
-                // Check for mobile network using user agent
-                else if (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
-                    networkType = 'Mobile Network';
-                    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-                        networkDetails = 'iOS Device';
-                    } else {
-                        networkDetails = 'Android Device';
-                    }
-                }
-                // Check for desktop network
-                else if (navigator.userAgent.match(/Windows|Mac|Linux/i)) {
-                    networkType = 'Desktop Network';
-                    if (navigator.userAgent.match(/Windows/i)) {
-                        networkDetails = 'Windows';
-                    } else if (navigator.userAgent.match(/Mac/i)) {
-                        networkDetails = 'MacOS';
-                    } else {
-                        networkDetails = 'Linux';
-                    }
-                }
-            }
-
-            // Security testing
-            function testNetworkSecurity() {
-                // Check for HTTPS
-                if (window.location.protocol === 'https:') {
-                    securityInfo.type = 'HTTPS';
-                    securityInfo.strength = 'Strong';
-                    securityInfo.encryption = 'TLS/SSL';
-                } else {
-                    securityInfo.type = 'HTTP';
-                    securityInfo.strength = 'Weak';
-                    securityInfo.encryption = 'None';
-                    securityInfo.vulnerabilities.push('Unencrypted connection');
-                }
-
-                // Check for secure cookies
-                if (document.cookie.includes('Secure')) {
-                    securityInfo.strength = 'Strong';
-                } else {
-                    securityInfo.vulnerabilities.push('Insecure cookies');
-                }
-
-                // Check for content security policy
-                if (document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
-                    securityInfo.strength = 'Strong';
-                } else {
-                    securityInfo.vulnerabilities.push('No Content Security Policy');
-                }
-
-                // Check for XSS protection
-                if (document.querySelector('meta[http-equiv="X-XSS-Protection"]')) {
-                    securityInfo.strength = 'Strong';
-                } else {
-                    securityInfo.vulnerabilities.push('No XSS Protection');
-                }
-
-                return securityInfo;
-            }
-
-            // Test network security
-            const security = testNetworkSecurity();
-
-            // Add connection details
-            if (connection) {
-                if (connection.downlink) {
-                    networkDetails += ` (${Math.round(connection.downlink)} Mbps)`;
-                }
-                if (connection.rtt) {
-                    networkDetails += ` | Latency: ${connection.rtt}ms`;
-                }
-                if (connection.saveData) {
-                    networkDetails += ' | Data Saver Mode';
-                }
-            }
-
-            return {
-                type: networkType,
-                details: networkDetails,
-                security: security
-            };
-        }
-
-        // Update network info display with security information
-        function updateNetworkInfo() {
-            const networkInfo = detectNetworkType();
-            document.getElementById('network-type').innerHTML = `
-                <div class="network-type">${networkInfo.type}</div>
-                <div class="network-details">${networkInfo.details}</div>
-                <div class="security-info">
-                    <div class="security-type">Security: ${networkInfo.security.type}</div>
-                    <div class="security-strength">Strength: ${networkInfo.security.strength}</div>
-                    <div class="security-encryption">Encryption: ${networkInfo.security.encryption}</div>
-                    ${networkInfo.security.vulnerabilities.length > 0 ? `
-                        <div class="security-vulnerabilities">
-                            <div class="vulnerability-title">Security Issues:</div>
-                            <ul>
-                                ${networkInfo.security.vulnerabilities.map(v => `<li>${v}</li>`).join('')}
-                            </ul>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // Add styles for security info
-        const securityStyles = document.createElement('style');
-        securityStyles.textContent = `
-            .security-info {
-                margin-top: 1rem;
-                padding: 1rem;
-                background: rgba(255, 255, 255, 0.02);
-                border-radius: 8px;
-                border-left: 3px solid var(--primary-color);
-            }
-            .security-type, .security-strength, .security-encryption {
-                font-size: 0.9rem;
-                color: var(--text-secondary);
-                margin: 0.3rem 0;
-            }
-            .security-vulnerabilities {
-                margin-top: 0.8rem;
-                padding-top: 0.8rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            .vulnerability-title {
-                color: var(--danger-color);
-                font-size: 0.9rem;
-                margin-bottom: 0.5rem;
-            }
-            .security-vulnerabilities ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-            .security-vulnerabilities li {
-                color: var(--text-secondary);
-                font-size: 0.8rem;
-                margin: 0.3rem 0;
-                padding-left: 1rem;
-                position: relative;
-            }
-            .security-vulnerabilities li:before {
-                content: '⚠️';
-                position: absolute;
-                left: 0;
-            }
-        `;
-        document.head.appendChild(securityStyles);
-
-        // Update network info periodically
-        setInterval(updateNetworkInfo, 5000);
-        updateNetworkInfo(); // Initial update
-
-        // WebRTC configuration
-        const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
-            ]
-        };
-
-        let peerConnection = null;
-        let dataChannel = null;
-        let isInitiator = false;
-
-        // Generate a unique connection code
-        function generateConnectionCode() {
-            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            document.getElementById('connection-code').textContent = code;
-            document.getElementById('connection-code').style.display = 'block';
-            isInitiator = true;
-            initializePeerConnection();
-        }
-
-        // Initialize WebRTC peer connection
-        function initializePeerConnection() {
-            peerConnection = new RTCPeerConnection(configuration);
-
-            // Handle ICE candidates
-            peerConnection.onicecandidate = event => {
-                if (event.candidate) {
-                    // Send the ICE candidate to the other peer
-                    sendToPeer({
-                        type: 'candidate',
-                        candidate: event.candidate
-                    });
-                }
-            };
-
-            // Handle connection state changes
-            peerConnection.onconnectionstatechange = () => {
-                updateConnectionStatus(peerConnection.connectionState);
-            };
-
-            if (isInitiator) {
-                // Create data channel
-                dataChannel = peerConnection.createDataChannel('speedTest');
-                setupDataChannel(dataChannel);
-                
-                // Create and send offer
-                peerConnection.createOffer()
-                    .then(offer => peerConnection.setLocalDescription(offer))
-                    .then(() => {
-                        // Send the offer to the other peer
-                        sendToPeer({
-                            type: 'offer',
-                            sdp: peerConnection.localDescription
-                        });
-                    });
-            } else {
-                // Handle incoming data channel
-                peerConnection.ondatachannel = event => {
-                    dataChannel = event.channel;
-                    setupDataChannel(dataChannel);
-                };
-            }
-        }
-
-        // Set up data channel
-        function setupDataChannel(channel) {
-            channel.onopen = () => {
-                console.log('Data channel opened');
-                updateConnectionStatus('connected');
-            };
-
-            channel.onclose = () => {
-                console.log('Data channel closed');
-                updateConnectionStatus('disconnected');
-            };
-
-            channel.onmessage = event => {
-                handleSpeedTestData(event.data);
-            };
-        }
-
-        // Connect to another device using the connection code
-        function connectToDevice() {
-            const code = document.getElementById('remote-code').value;
-            if (!code) {
-                alert('Please enter a connection code');
-                return;
-            }
-
-            isInitiator = false;
-            initializePeerConnection();
-            // In a real implementation, you would use a signaling server to exchange the code
-            // For this example, we'll simulate the connection
-            simulateConnection(code);
-        }
-
-        // Simulate connection for demonstration
-        function simulateConnection(code) {
-            setTimeout(() => {
-                updateConnectionStatus('connected');
-                document.getElementById('device-list').style.display = 'grid';
-            }, 2000);
-        }
-
-        // Update connection status UI
-        function updateConnectionStatus(status) {
-            const statusElement = document.createElement('div');
-            statusElement.className = `connection-status ${status}`;
-            statusElement.textContent = `Connection Status: ${status.toUpperCase()}`;
-            
-            const existingStatus = document.querySelector('.connection-status');
-            if (existingStatus) {
-                existingStatus.remove();
-            }
-            
-            document.querySelector('.connection-setup').appendChild(statusElement);
-        }
-
-        // Handle speed test data
-        function handleSpeedTestData(data) {
-            try {
-                const testData = JSON.parse(data);
-                if (testData.type === 'speed-test') {
-                    updateSpeedTestResults(testData);
-                }
-            } catch (error) {
-                console.error('Error handling speed test data:', error);
-            }
-        }
-
-        // Update speed test results
-        function updateSpeedTestResults(data) {
-            document.getElementById('download').textContent = data.download.toFixed(1);
-            document.getElementById('upload').textContent = data.upload.toFixed(1);
-            document.getElementById('ping').textContent = data.ping.toFixed(1);
-        }
-
-        // Modified startDeviceTest function to use WebRTC
-        function startDeviceTest() {
-            if (!dataChannel || dataChannel.readyState !== 'open') {
-                alert('Please connect to a device first');
-                return;
-            }
-
-            const testDuration = 5000; // 5 seconds
-            const startTime = Date.now();
-            const progressBar = document.getElementById('progress-bar');
-            const statusText = document.getElementById('status');
-
-            statusText.textContent = 'Running speed test...';
-            progressBar.style.width = '0%';
-
-            // Simulate speed test data
-            const interval = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min((elapsed / testDuration) * 100, 100);
-                progressBar.style.width = progress + '%';
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    const testResults = {
-                        type: 'speed-test',
-                        download: Math.random() * 100 + 50,
-                        upload: Math.random() * 50 + 25,
-                        ping: Math.random() * 20 + 5
-                    };
-
-                    // Send results through data channel
-                    if (dataChannel.readyState === 'open') {
-                        dataChannel.send(JSON.stringify(testResults));
-                    }
-
-                    statusText.textContent = 'Speed test completed!';
-                }
-            }, 100);
-        }
-
-        // Initialize the interface
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeDeviceList();
-            initializeTopology();
-            updateLocation();
-        });
-
-        let currentRoom = null;
-        let isHost = false;
-
-        // Create a new room
-        function createRoom() {
-            const roomId = generateRoomId();
-            currentRoom = roomId;
-            isHost = true;
-            
-            // Update UI
-            document.getElementById('room-info').style.display = 'block';
-            document.getElementById('room-link').value = `${window.location.origin}/room/${roomId}`;
-            document.getElementById('start-device-test').style.display = 'block';
-            
-            // Create room on server
-            socket.emit('create_room', { room_id: roomId });
-            
-            // Initialize WebRTC as host
-            initializePeerConnection(true);
-        }
-
-        // Join an existing room
-        function joinRoom() {
-            const roomId = window.location.pathname.split('/').pop();
-            if (roomId && roomId !== 'index.html') {
-                currentRoom = roomId;
-                isHost = false;
-                
-                // Update UI
-                document.getElementById('room-info').style.display = 'block';
-                document.getElementById('room-link').value = window.location.href;
-                document.getElementById('start-device-test').style.display = 'block';
-                
-                // Join room on server
-                socket.emit('join_room', { room_id: roomId });
-                
-                // Initialize WebRTC as guest
-                initializePeerConnection(false);
-            } else {
-                alert('Invalid room ID. Please use a valid room link.');
-            }
-        }
-
-        // Generate a unique room ID
-        function generateRoomId() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-
-        // Copy room link to clipboard
-        function copyRoomLink() {
-            const linkInput = document.getElementById('room-link');
-            linkInput.select();
-            document.execCommand('copy');
-            
-            // Show feedback
-            const copyBtn = document.querySelector('.btn-copy');
-            const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                copyBtn.innerHTML = originalText;
-            }, 2000);
-        }
-
-        // Modified WebRTC initialization
-        function initializePeerConnection(isHost) {
-            peerConnection = new RTCPeerConnection(configuration);
-
-            peerConnection.onicecandidate = event => {
-                if (event.candidate) {
-                    socket.emit('ice_candidate', {
-                        room_id: currentRoom,
-                        candidate: event.candidate
-                    });
-                }
-            };
-
-            peerConnection.onconnectionstatechange = () => {
-                updateConnectionStatus(peerConnection.connectionState);
-            };
-
-            if (isHost) {
-                dataChannel = peerConnection.createDataChannel('speedTest');
-                setupDataChannel(dataChannel);
-            } else {
-                peerConnection.ondatachannel = event => {
-                    dataChannel = event.channel;
-                    setupDataChannel(dataChannel);
-                };
-            }
-        }
-
-        // Set up data channel
-        function setupDataChannel(channel) {
-            channel.onopen = () => {
-                console.log('Data channel opened');
-                updateConnectionStatus('connected');
-            };
-
-            channel.onclose = () => {
-                console.log('Data channel closed');
-                updateConnectionStatus('disconnected');
-            };
-
-            channel.onmessage = event => {
-                handleSpeedTestData(event.data);
-            };
-        }
-
-        // Socket.io event handlers
-        socket.on('room_created', data => {
-            console.log('Room created:', data.room_id);
-        });
-
-        socket.on('user_joined', data => {
-            console.log('User joined:', data.user_id);
-            if (isHost) {
-                createAndSendOffer();
-            }
-        });
-
-        socket.on('offer', async data => {
-            if (!isHost) {
-                try {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                    socket.emit('answer', {
-                        room_id: currentRoom,
-                        sdp: answer
-                    });
-                } catch (error) {
-                    console.error('Error handling offer:', error);
-                }
-            }
-        });
-
-        socket.on('answer', async data => {
-            if (isHost) {
-                try {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
-                } catch (error) {
-                    console.error('Error handling answer:', error);
-                }
-            }
-        });
-
-        socket.on('ice_candidate', async data => {
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (error) {
-                console.error('Error adding ICE candidate:', error);
-            }
-        });
-
-        socket.on('host_disconnected', () => {
-            alert('Host disconnected. Please refresh the page.');
-            window.location.href = '/';
-        });
-
-        socket.on('guest_disconnected', data => {
-            console.log('Guest disconnected:', data.user_id);
-            updateConnectionStatus('disconnected');
-        });
-
-        // Create and send offer
-        async function createAndSendOffer() {
-            try {
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                socket.emit('offer', {
-                    room_id: currentRoom,
-                    sdp: offer
-                });
-            } catch (error) {
-                console.error('Error creating offer:', error);
-            }
-        }
-
-        // Update connection status UI
-        function updateConnectionStatus(status) {
-            const statusDot = document.querySelector('.status-dot');
-            const statusText = document.querySelector('.status-text');
-            
-            statusDot.className = 'status-dot ' + (status === 'connected' ? 'connected' : '');
-            
-            switch(status) {
-                case 'connected':
-                    statusText.textContent = 'Connected! Ready to test speed.';
-                    break;
-                case 'connecting':
-                    statusText.textContent = 'Connecting...';
-                    break;
-                case 'disconnected':
-                    statusText.textContent = 'Disconnected. Please refresh the page.';
-                    break;
-                default:
-                    statusText.textContent = 'Waiting for connection...';
-            }
-        }
-
-        // Check if we're joining a room on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const path = window.location.pathname;
-            if (path.includes('/room/')) {
-                joinRoom();
-            }
-        });
-
-        // Modified startDeviceTest function
-        function startDeviceTest() {
-            if (!dataChannel || dataChannel.readyState !== 'open') {
-                alert('Please wait for the connection to be established');
-                return;
-            }
-
-            const testDuration = 5000;
-            const startTime = Date.now();
-            const progressBar = document.getElementById('progress-bar');
-            const statusText = document.getElementById('status');
-
-            statusText.textContent = 'Running speed test...';
-            progressBar.style.width = '0%';
-
-            const interval = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min((elapsed / testDuration) * 100, 100);
-                progressBar.style.width = progress + '%';
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    const testResults = {
-                        type: 'speed-test',
-                        download: Math.random() * 100 + 50,
-                        upload: Math.random() * 50 + 25,
-                        ping: Math.random() * 20 + 5
-                    };
-
-                    if (dataChannel.readyState === 'open') {
-                        dataChannel.send(JSON.stringify(testResults));
-                    }
-
-                    statusText.textContent = 'Speed test completed!';
-                }
-            }, 100);
-        }
     </script>
 </body>
 </html> 
