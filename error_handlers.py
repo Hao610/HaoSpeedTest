@@ -35,7 +35,7 @@ def register_error_handlers(app):
             'status_code': 401
         }), 401
 
-    @app.errorhandler(PaymentRequired)
+    @app.errorhandler(402)
     def payment_required_error(error):
         logger.error(f"Payment Required: {str(error)}")
         return jsonify({
