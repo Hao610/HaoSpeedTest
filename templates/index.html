@@ -88,10 +88,10 @@
         }
 
         .logo-container {
-            position: relative;
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-top: 1rem;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
         }
 
         .logo {
@@ -716,6 +716,14 @@
                 letter-spacing: 2px;
             }
 
+            .logo-container {
+                position: relative;
+                top: 0;
+                left: 0;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+
             .logo {
                 width: 150px;
             }
@@ -1085,6 +1093,7 @@
         // Initialize server list
         function initializeServerList() {
             const serverList = document.getElementById('server-list');
+            serverList.innerHTML = ''; // Clear existing servers
             servers.forEach((server, index) => {
                 const serverItem = document.createElement('div');
                 serverItem.className = 'server-item' + (index === 0 ? ' selected' : '');
@@ -1137,10 +1146,12 @@
         }
 
         function updateUI(data) {
-            document.getElementById('download').textContent = data.download;
-            document.getElementById('upload').textContent = data.upload;
-            document.getElementById('ping').textContent = data.ping;
-            document.getElementById('progress-bar').style.width = data.progress + '%';
+            if (!data) return;
+            
+            document.getElementById('download').textContent = data.download || '0';
+            document.getElementById('upload').textContent = data.upload || '0';
+            document.getElementById('ping').textContent = data.ping || '0';
+            document.getElementById('progress-bar').style.width = (data.progress || 0) + '%';
             
             // Update network info
             if (data.networkType) {
@@ -1178,17 +1189,29 @@
         function startTest() {
             if (isTestRunning) return;
             
+            const startButton = document.getElementById('start-test');
+            startButton.disabled = true;
+            
             fetch('/start-test')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.status === 'started') {
                         isTestRunning = true;
                         pollStatus();
+                    } else {
+                        throw new Error('Failed to start test');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('status').textContent = 'Error starting analysis';
+                    startButton.disabled = false;
+                    isTestRunning = false;
                 });
         }
 
@@ -1196,58 +1219,68 @@
             if (!isTestRunning) return;
             
             fetch('/test-status')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     updateUI(data);
                     if (data.status === 'running') {
                         setTimeout(pollStatus, 1000);
+                    } else {
+                        isTestRunning = false;
+                        document.getElementById('start-test').disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     isTestRunning = false;
                     document.getElementById('status').textContent = 'Error checking status';
+                    document.getElementById('start-test').disabled = false;
                 });
         }
 
         // Initialize the interface
-        initializeServerList();
-        generateAIInsights();
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeServerList();
+            
+            // Initial status check
+            fetch('/test-status')
+                .then(response => response.json())
+                .then(data => updateUI(data))
+                .catch(error => console.error('Error:', error));
 
-        // Initial status check
-        fetch('/test-status')
-            .then(response => response.json())
-            .then(data => updateUI(data))
-            .catch(error => console.error('Error:', error));
-
-        // Simulate network info updates
-        setInterval(() => {
-            if (!isTestRunning) {
-                const networkTypes = ['WiFi 6E', 'WiFi 6', '5G', '4G LTE'];
-                const signalStrengths = ['Excellent', 'Good', 'Fair', 'Poor'];
-                const qualities = ['High', 'Medium', 'Low'];
-                const protocols = ['IPv6', 'IPv4', 'Dual Stack'];
-                
-                document.getElementById('network-type').textContent = 
-                    networkTypes[Math.floor(Math.random() * networkTypes.length)];
-                document.getElementById('signal-strength').textContent = 
-                    signalStrengths[Math.floor(Math.random() * signalStrengths.length)];
-                document.getElementById('connection-quality').textContent = 
-                    qualities[Math.floor(Math.random() * qualities.length)];
-                document.getElementById('protocol').textContent = 
-                    protocols[Math.floor(Math.random() * protocols.length)];
-                
-                // Update additional stats
-                document.getElementById('packet-loss').textContent = 
-                    (Math.random() * 2).toFixed(1) + '%';
-                document.getElementById('jitter').textContent = 
-                    Math.floor(Math.random() * 10) + ' ms';
-                document.getElementById('buffer-bloat').textContent = 
-                    Math.floor(Math.random() * 50) + ' ms';
-                document.getElementById('dns-latency').textContent = 
-                    Math.floor(Math.random() * 30) + ' ms';
-            }
-        }, 5000);
+            // Simulate network info updates
+            setInterval(() => {
+                if (!isTestRunning) {
+                    const networkTypes = ['WiFi 6E', 'WiFi 6', '5G', '4G LTE'];
+                    const signalStrengths = ['Excellent', 'Good', 'Fair', 'Poor'];
+                    const qualities = ['High', 'Medium', 'Low'];
+                    const protocols = ['IPv6', 'IPv4', 'Dual Stack'];
+                    
+                    document.getElementById('network-type').textContent = 
+                        networkTypes[Math.floor(Math.random() * networkTypes.length)];
+                    document.getElementById('signal-strength').textContent = 
+                        signalStrengths[Math.floor(Math.random() * signalStrengths.length)];
+                    document.getElementById('connection-quality').textContent = 
+                        qualities[Math.floor(Math.random() * qualities.length)];
+                    document.getElementById('protocol').textContent = 
+                        protocols[Math.floor(Math.random() * protocols.length)];
+                    
+                    // Update additional stats
+                    document.getElementById('packet-loss').textContent = 
+                        (Math.random() * 2).toFixed(1) + '%';
+                    document.getElementById('jitter').textContent = 
+                        Math.floor(Math.random() * 10) + ' ms';
+                    document.getElementById('buffer-bloat').textContent = 
+                        Math.floor(Math.random() * 50) + ' ms';
+                    document.getElementById('dns-latency').textContent = 
+                        Math.floor(Math.random() * 30) + ' ms';
+                }
+            }, 5000);
+        });
     </script>
 </body>
 </html> 
