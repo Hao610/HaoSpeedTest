@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 app.config['DEBUG'] = True  # Enable debug mode for development
-app.config['SOCKETIO_ASYNC_MODE'] = 'eventlet'
+app.config['SOCKETIO_ASYNC_MODE'] = 'gevent'
 
 # Security configurations
 Talisman(app,
@@ -49,7 +49,7 @@ limiter = Limiter(
 
 socketio = SocketIO(app, 
     cors_allowed_origins="*",
-    async_mode='eventlet',
+    async_mode='gevent',
     ping_timeout=60,
     ping_interval=25
 )
