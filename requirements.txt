@@ -13,3 +13,4 @@ netifaces==0.11.0
 scapy==2.5.0
 flask-limiter==2.6.3
 limits==2.7.0
+flask-talisman==0.8.1
