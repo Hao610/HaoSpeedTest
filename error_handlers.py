@@ -10,6 +10,10 @@ class LoopDetected(HTTPException):
     code = 508
     description = 'Loop Detected'
 
+class PaymentRequired(HTTPException):
+    code = 402
+    description = 'Payment Required'
+
 def register_error_handlers(app):
     """Register error handlers for the Flask application"""
     
@@ -30,6 +34,15 @@ def register_error_handlers(app):
             'message': str(error),
             'status_code': 401
         }), 401
+
+    @app.errorhandler(PaymentRequired)
+    def payment_required_error(error):
+        logger.error(f"Payment Required: {str(error)}")
+        return jsonify({
+            'error': 'Payment Required',
+            'message': str(error),
+            'status_code': 402
+        }), 402
 
     @app.errorhandler(403)
     def forbidden_error(error):
