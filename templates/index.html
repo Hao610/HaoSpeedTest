@@ -1075,211 +1075,175 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         let isTestRunning = false;
-        let speedHistory = {
-            download: [],
-            upload: [],
-            ping: []
-        };
+        let currentServer = null;
 
-        // Sample server data
+        // Global server data with more locations
         const servers = [
-            { name: 'Local Server', location: 'Your City', latency: '5ms' },
-            { name: 'Regional Server', location: 'Nearest City', latency: '15ms' },
-            { name: 'Global Server 1', location: 'New York', latency: '45ms' },
-            { name: 'Global Server 2', location: 'London', latency: '85ms' },
-            { name: 'Global Server 3', location: 'Tokyo', latency: '120ms' }
+            { name: 'Local Server', location: 'Your City', latency: '5ms', region: 'local' },
+            { name: 'North America', location: 'New York', latency: '45ms', region: 'na' },
+            { name: 'North America', location: 'Los Angeles', latency: '65ms', region: 'na' },
+            { name: 'Europe', location: 'London', latency: '85ms', region: 'eu' },
+            { name: 'Europe', location: 'Paris', latency: '95ms', region: 'eu' },
+            { name: 'Asia', location: 'Tokyo', latency: '120ms', region: 'asia' },
+            { name: 'Asia', location: 'Singapore', latency: '150ms', region: 'asia' },
+            { name: 'Australia', location: 'Sydney', latency: '180ms', region: 'au' },
+            { name: 'South America', location: 'São Paulo', latency: '160ms', region: 'sa' },
+            { name: 'Africa', location: 'Johannesburg', latency: '200ms', region: 'af' }
         ];
 
-        // Initialize server list
         function initializeServerList() {
             const serverList = document.getElementById('server-list');
-            serverList.innerHTML = ''; // Clear existing servers
+            serverList.innerHTML = '';
+            
             servers.forEach((server, index) => {
                 const serverItem = document.createElement('div');
                 serverItem.className = 'server-item' + (index === 0 ? ' selected' : '');
                 serverItem.innerHTML = `
                     <div class="server-name">${server.name}</div>
+                    <div class="server-location">${server.location}</div>
                     <div class="server-latency">
                         <i class="fas fa-bolt"></i>
                         ${server.latency}
                     </div>
                 `;
-                serverItem.onclick = () => selectServer(index);
+                serverItem.onclick = () => selectServer(server);
                 serverList.appendChild(serverItem);
             });
+            
+            currentServer = servers[0];
         }
 
-        function selectServer(index) {
-            document.querySelectorAll('.server-item').forEach((item, i) => {
-                item.classList.toggle('selected', i === index);
+        function selectServer(server) {
+            document.querySelectorAll('.server-item').forEach(item => {
+                item.classList.remove('selected');
             });
+            event.currentTarget.classList.add('selected');
+            currentServer = server;
         }
 
-        // AI Insights
-        function generateAIInsights() {
-            const insights = [
-                {
-                    title: 'Network Optimization',
-                    text: 'Your network shows optimal performance for streaming and gaming. Consider enabling QoS for better traffic management.'
-                },
-                {
-                    title: 'Signal Strength',
-                    text: 'Strong signal detected. Your router placement is optimal for current usage patterns.'
-                },
-                {
-                    title: 'Security Recommendation',
-                    text: 'Network security is good. Consider enabling WPA3 for enhanced protection.'
-                }
-            ];
-
-            const container = document.getElementById('insights-container');
-            container.innerHTML = '';
-            insights.forEach(insight => {
-                const insightElement = document.createElement('div');
-                insightElement.className = 'insight-item';
-                insightElement.innerHTML = `
-                    <div class="insight-title">${insight.title}</div>
-                    <div class="insight-text">${insight.text}</div>
-                `;
-                container.appendChild(insightElement);
-            });
-        }
-
-        function updateUI(data) {
-            if (!data) return;
-            
-            document.getElementById('download').textContent = data.download || '0';
-            document.getElementById('upload').textContent = data.upload || '0';
-            document.getElementById('ping').textContent = data.ping || '0';
-            document.getElementById('progress-bar').style.width = (data.progress || 0) + '%';
-            
-            // Update network info
-            if (data.networkType) {
-                document.getElementById('network-type').textContent = data.networkType;
-            }
-            if (data.signalStrength) {
-                document.getElementById('signal-strength').textContent = data.signalStrength;
-            }
-            if (data.connectionQuality) {
-                document.getElementById('connection-quality').textContent = data.connectionQuality;
-            }
-            
-            let statusText = 'Ready to analyze network performance';
-            if (data.status === 'running') {
-                statusText = 'Analyzing network performance...';
-                document.getElementById('start-test').classList.add('pulse');
-                document.getElementById('loading').style.display = 'block';
-            } else if (data.status === 'completed') {
-                statusText = 'Analysis completed!';
-                isTestRunning = false;
-                document.getElementById('start-test').classList.remove('pulse');
-                document.getElementById('loading').style.display = 'none';
-                generateAIInsights();
-            } else if (data.status === 'error') {
-                statusText = 'Error during analysis';
-                isTestRunning = false;
-                document.getElementById('start-test').classList.remove('pulse');
-                document.getElementById('loading').style.display = 'none';
-            }
-            document.getElementById('status').textContent = statusText;
-            
-            document.getElementById('start-test').disabled = data.status === 'running';
-        }
-
-        function startTest() {
+        async function startTest() {
             if (isTestRunning) return;
             
             const startButton = document.getElementById('start-test');
             startButton.disabled = true;
+            isTestRunning = true;
             
-            fetch('/start-test')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'started') {
-                        isTestRunning = true;
-                        pollStatus();
-                    } else {
-                        throw new Error('Failed to start test');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('status').textContent = 'Error starting analysis';
-                    startButton.disabled = false;
-                    isTestRunning = false;
-                });
+            try {
+                // Reset UI
+                document.getElementById('download').textContent = '0';
+                document.getElementById('upload').textContent = '0';
+                document.getElementById('ping').textContent = '0';
+                document.getElementById('progress-bar').style.width = '0%';
+                document.getElementById('status').textContent = 'Initializing test...';
+                document.getElementById('loading').style.display = 'block';
+
+                // Start ping test
+                const pingResult = await testPing();
+                document.getElementById('ping').textContent = pingResult;
+                document.getElementById('progress-bar').style.width = '33%';
+                
+                // Start download test
+                document.getElementById('status').textContent = 'Testing download speed...';
+                const downloadResult = await testDownload();
+                document.getElementById('download').textContent = downloadResult;
+                document.getElementById('progress-bar').style.width = '66%';
+                
+                // Start upload test
+                document.getElementById('status').textContent = 'Testing upload speed...';
+                const uploadResult = await testUpload();
+                document.getElementById('upload').textContent = uploadResult;
+                document.getElementById('progress-bar').style.width = '100%';
+                
+                // Test complete
+                document.getElementById('status').textContent = 'Test completed!';
+                updateNetworkInfo();
+                
+            } catch (error) {
+                console.error('Error during speed test:', error);
+                document.getElementById('status').textContent = 'Error during test. Please try again.';
+            } finally {
+                isTestRunning = false;
+                startButton.disabled = false;
+                document.getElementById('loading').style.display = 'none';
+            }
         }
 
-        function pollStatus() {
-            if (!isTestRunning) return;
-            
-            fetch('/test-status')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    updateUI(data);
-                    if (data.status === 'running') {
-                        setTimeout(pollStatus, 1000);
-                    } else {
-                        isTestRunning = false;
-                        document.getElementById('start-test').disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    isTestRunning = false;
-                    document.getElementById('status').textContent = 'Error checking status';
-                    document.getElementById('start-test').disabled = false;
+        async function testPing() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/ping-test');
+                const data = await response.json();
+                const endTime = performance.now();
+                return data.ping || Math.round(endTime - startTime);
+            } catch (error) {
+                console.error('Ping test error:', error);
+                return 'Error';
+            }
+        }
+
+        async function testDownload() {
+            const startTime = performance.now();
+            try {
+                const response = await fetch('/download-test');
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = (endTime - startTime) / 1000;
+                const speed = Math.round((data.size * 8) / (duration * 1000));
+                return speed;
+            } catch (error) {
+                console.error('Download test error:', error);
+                return 'Error';
+            }
+        }
+
+        async function testUpload() {
+            const startTime = performance.now();
+            try {
+                const testData = new Blob([new ArrayBuffer(1024 * 1024)]);
+                const response = await fetch('/upload-test', {
+                    method: 'POST',
+                    body: testData
                 });
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = (endTime - startTime) / 1000;
+                const speed = Math.round((testData.size * 8) / (duration * 1000));
+                return speed;
+            } catch (error) {
+                console.error('Upload test error:', error);
+                return 'Error';
+            }
+        }
+
+        function updateNetworkInfo() {
+            const networkTypes = ['WiFi 6E', 'WiFi 6', '5G', '4G LTE'];
+            const signalStrengths = ['Excellent', 'Good', 'Fair', 'Poor'];
+            const qualities = ['High', 'Medium', 'Low'];
+            const protocols = ['IPv6', 'IPv4', 'Dual Stack'];
+            
+            document.getElementById('network-type').textContent = 
+                networkTypes[Math.floor(Math.random() * networkTypes.length)];
+            document.getElementById('signal-strength').textContent = 
+                signalStrengths[Math.floor(Math.random() * signalStrengths.length)];
+            document.getElementById('connection-quality').textContent = 
+                qualities[Math.floor(Math.random() * qualities.length)];
+            document.getElementById('protocol').textContent = 
+                protocols[Math.floor(Math.random() * protocols.length)];
+            
+            document.getElementById('packet-loss').textContent = 
+                (Math.random() * 2).toFixed(1) + '%';
+            document.getElementById('jitter').textContent = 
+                Math.floor(Math.random() * 10) + ' ms';
+            document.getElementById('buffer-bloat').textContent = 
+                Math.floor(Math.random() * 50) + ' ms';
+            document.getElementById('dns-latency').textContent = 
+                Math.floor(Math.random() * 30) + ' ms';
         }
 
         // Initialize the interface
         document.addEventListener('DOMContentLoaded', function() {
             initializeServerList();
-            
-            // Initial status check
-            fetch('/test-status')
-                .then(response => response.json())
-                .then(data => updateUI(data))
-                .catch(error => console.error('Error:', error));
-
-            // Simulate network info updates
-            setInterval(() => {
-                if (!isTestRunning) {
-                    const networkTypes = ['WiFi 6E', 'WiFi 6', '5G', '4G LTE'];
-                    const signalStrengths = ['Excellent', 'Good', 'Fair', 'Poor'];
-                    const qualities = ['High', 'Medium', 'Low'];
-                    const protocols = ['IPv6', 'IPv4', 'Dual Stack'];
-                    
-                    document.getElementById('network-type').textContent = 
-                        networkTypes[Math.floor(Math.random() * networkTypes.length)];
-                    document.getElementById('signal-strength').textContent = 
-                        signalStrengths[Math.floor(Math.random() * signalStrengths.length)];
-                    document.getElementById('connection-quality').textContent = 
-                        qualities[Math.floor(Math.random() * qualities.length)];
-                    document.getElementById('protocol').textContent = 
-                        protocols[Math.floor(Math.random() * protocols.length)];
-                    
-                    // Update additional stats
-                    document.getElementById('packet-loss').textContent = 
-                        (Math.random() * 2).toFixed(1) + '%';
-                    document.getElementById('jitter').textContent = 
-                        Math.floor(Math.random() * 10) + ' ms';
-                    document.getElementById('buffer-bloat').textContent = 
-                        Math.floor(Math.random() * 50) + ' ms';
-                    document.getElementById('dns-latency').textContent = 
-                        Math.floor(Math.random() * 30) + ' ms';
-                }
-            }, 5000);
+            updateNetworkInfo();
         });
     </script>
 </body>

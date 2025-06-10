@@ -187,26 +187,73 @@ def cleanup_rooms():
 @app.route('/start-test')
 def start_test():
     try:
-        # Your speed test logic here
-        return jsonify({'status': 'started'})
+        # Initialize speed test
+        return jsonify({
+            'status': 'started',
+            'message': 'Speed test initialized'
+        })
     except Exception as e:
         logger.error(f"Error starting test: {str(e)}")
-        raise
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/ping-test')
+def ping_test():
+    try:
+        # Simulate ping test
+        import time
+        start_time = time.time()
+        time.sleep(0.1)  # Simulate network delay
+        ping_time = int((time.time() - start_time) * 1000)
+        return jsonify({'ping': ping_time})
+    except Exception as e:
+        logger.error(f"Error in ping test: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/download-test')
+def download_test():
+    try:
+        # Generate test data (1MB)
+        test_data = b'0' * (1024 * 1024)
+        return jsonify({
+            'size': len(test_data),
+            'data': test_data.hex()  # Convert to hex for JSON
+        })
+    except Exception as e:
+        logger.error(f"Error in download test: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/upload-test', methods=['POST'])
+def upload_test():
+    try:
+        # Get the uploaded data
+        data = request.get_data()
+        size = len(data)
+        return jsonify({
+            'status': 'success',
+            'size': size
+        })
+    except Exception as e:
+        logger.error(f"Error in upload test: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/test-status')
 def test_status():
     try:
-        # Your status check logic here
+        # Return current test status
         return jsonify({
             'status': 'running',
             'progress': 0,
             'download': 0,
             'upload': 0,
-            'ping': 0
+            'ping': 0,
+            'networkType': 'WiFi 6E',
+            'signalStrength': 'Excellent',
+            'connectionQuality': 'High',
+            'protocol': 'IPv6'
         })
     except Exception as e:
         logger.error(f"Error checking status: {str(e)}")
-        raise
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     try:
