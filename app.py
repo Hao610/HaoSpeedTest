@@ -211,8 +211,8 @@ def get_network_info() -> Optional[NetworkInfo]:
         app.logger.error(f"Error getting network info: {str(e)}")
         return None
 
-def run_speed_test() -> Optional[Dict[str, Any]]:
-    """Run a simple speed test with basic measurements"""
+def run_speed_test() -> dict:
+    """Run a simple speed test"""
     try:
         # Initialize speedtest
         st = speedtest.Speedtest()
@@ -248,7 +248,7 @@ def run_speed_test() -> Optional[Dict[str, Any]]:
             'timestamp': datetime.now().isoformat()
         }
     except Exception as e:
-        app.logger.error(f"Error running speed test: {str(e)}")
+        logger.error(f"Error running speed test: {str(e)}")
         return None
 
 def calculate_packet_loss() -> float:
