@@ -217,13 +217,15 @@ def run_speed_test() -> Optional[Dict[str, Any]]:
         # Get ping
         ping = st.results.ping
         
-        # Apply realistic speed limits and rounding
-        # Most consumer connections are under 1Gbps (1000 Mbps)
-        max_speed = 1000  # 1 Gbps
+        # Convert to Mbps and apply more conservative limits
+        # Most consumer connections are much lower than 1Gbps
+        max_speed = 100  # 100 Mbps as a more realistic maximum
         
-        # Round speeds to 2 decimal places and cap at max_speed
-        download_mbps = min(round(download_speed / 1000000, 2), max_speed)
-        upload_mbps = min(round(upload_speed / 1000000, 2), max_speed)
+        # Convert to Mbps and apply more conservative calculations
+        # Divide by 1,000,000 to convert from bits to Mbps
+        # Apply a conservative factor of 0.8 to account for overhead
+        download_mbps = min(round((download_speed / 1000000) * 0.8, 2), max_speed)
+        upload_mbps = min(round((upload_speed / 1000000) * 0.8, 2), max_speed)
         
         # Ensure ping is realistic (usually between 1-100ms)
         ping_ms = max(1, min(round(ping, 2), 100))
@@ -255,15 +257,13 @@ def run_speed_test() -> Optional[Dict[str, Any]]:
 
 def get_connection_type(download: float, upload: float) -> str:
     """Determine the type of connection based on speeds"""
-    if download >= 900:  # 900+ Mbps
-        return "Fiber (1Gbps)"
-    elif download >= 500:  # 500+ Mbps
-        return "Fiber (500Mbps)"
-    elif download >= 100:  # 100+ Mbps
+    if download >= 90:  # 90+ Mbps
+        return "Fiber (100Mbps)"
+    elif download >= 50:  # 50+ Mbps
         return "Fiber/Cable"
-    elif download >= 50:   # 50+ Mbps
-        return "Cable/DSL"
     elif download >= 25:   # 25+ Mbps
+        return "Cable/DSL"
+    elif download >= 10:   # 10+ Mbps
         return "DSL"
     else:
         return "Basic"
@@ -271,25 +271,25 @@ def get_connection_type(download: float, upload: float) -> str:
 def get_connection_quality(download: float, upload: float, ping: float) -> Dict[str, str]:
     """Determine the quality of the connection"""
     # Download quality
-    if download >= 900:
+    if download >= 90:
         download_quality = "Excellent"
-    elif download >= 500:
-        download_quality = "Very Good"
-    elif download >= 100:
-        download_quality = "Good"
     elif download >= 50:
+        download_quality = "Very Good"
+    elif download >= 25:
+        download_quality = "Good"
+    elif download >= 10:
         download_quality = "Fair"
     else:
         download_quality = "Basic"
     
     # Upload quality
-    if upload >= 900:
+    if upload >= 90:
         upload_quality = "Excellent"
-    elif upload >= 500:
-        upload_quality = "Very Good"
-    elif upload >= 100:
-        upload_quality = "Good"
     elif upload >= 50:
+        upload_quality = "Very Good"
+    elif upload >= 25:
+        upload_quality = "Good"
+    elif upload >= 10:
         upload_quality = "Fair"
     else:
         upload_quality = "Basic"
