@@ -23,9 +23,6 @@ import re
 from typing import Dict, Any, Optional, List, Tuple, Union
 import concurrent.futures
 from functools import lru_cache
-import aiohttp
-import asyncio
-from aiohttp import ClientTimeout
 import ssl
 import certifi
 import dns.resolver
