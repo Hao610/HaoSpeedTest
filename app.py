@@ -1,7 +1,5 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 import os
 import json
@@ -22,7 +20,7 @@ import psutil
 import platform
 import subprocess
 import re
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 import concurrent.futures
 from functools import lru_cache
 import aiohttp
@@ -32,7 +30,15 @@ import ssl
 import certifi
 import dns.resolver
 from urllib.parse import urlparse
-import netifaces
+from typing_extensions import TypedDict
+
+# Try to import netifaces, but provide a fallback if it's not available
+try:
+    import netifaces
+    NETIFACES_AVAILABLE = True
+except ImportError:
+    NETIFACES_AVAILABLE = False
+    logging.warning("netifaces module not available. Some network interface features will be limited.")
 
 # Configure logging
 logging.basicConfig(
@@ -41,8 +47,28 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Type definitions
+class LocationData(TypedDict):
+    latitude: float
+    longitude: float
+    city: str
+    country: str
+    region: str
+    timezone: str
+
+class NetworkInfo(TypedDict):
+    bytes_sent: int
+    bytes_recv: int
+    packets_sent: int
+    packets_recv: int
+    error_in: int
+    error_out: int
+    drop_in: int
+    drop_out: int
+    interfaces: Dict[str, Dict[str, str]]
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 app.config['DEBUG'] = False  # Disable debug mode in production
 app.config['SOCKETIO_ASYNC_MODE'] = 'gevent'
 app.config['SOCKETIO_PING_TIMEOUT'] = 60
@@ -67,12 +93,14 @@ Talisman(app,
     }
 )
 
-# Rate limiting
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
-)
+# Rate limiting (temporarily disabled)
+# limiter = Limiter(
+#     app=app,
+#     key_func=get_remote_address,
+#     default_limits=["200 per day", "50 per hour"],
+#     storage_uri="memory://",
+#     strategy="fixed-window"
+# )
 
 socketio = SocketIO(app, 
     cors_allowed_origins="*",
@@ -85,7 +113,7 @@ socketio = SocketIO(app,
 )
 
 # Store active rooms with enhanced security
-rooms = {}
+rooms: Dict[str, Dict[str, Any]] = {}
 MAX_ROOM_AGE = timedelta(hours=1)
 MAX_ROOMS_PER_IP = 5
 
@@ -95,20 +123,55 @@ app = register_error_handlers(app)
 # Initialize speedtest
 st = speedtest.Speedtest()
 
-def get_accurate_location():
+def get_network_interfaces() -> Dict[str, Dict[str, str]]:
+    """Get network interface information with fallback if netifaces is not available"""
+    if NETIFACES_AVAILABLE:
+        try:
+            interfaces = {}
+            for interface in netifaces.interfaces():
+                addrs = netifaces.ifaddresses(interface)
+                if netifaces.AF_INET in addrs:
+                    interfaces[interface] = {
+                        'ipv4': addrs[netifaces.AF_INET][0]['addr'],
+                        'netmask': addrs[netifaces.AF_INET][0]['netmask']
+                    }
+                if netifaces.AF_INET6 in addrs:
+                    interfaces[interface] = {
+                        'ipv6': addrs[netifaces.AF_INET6][0]['addr']
+                    }
+            return interfaces
+        except Exception as e:
+            logger.error(f"Error getting network interfaces: {str(e)}")
+    
+    # Fallback using socket
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        return {
+            'default': {
+                'ipv4': ip_address,
+                'hostname': hostname
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting network info fallback: {str(e)}")
+        return {}
+
+def get_accurate_location() -> Optional[LocationData]:
     """Get accurate location using multiple methods"""
     try:
         # Try IP-based geolocation first
         g = geocoder.ip('me')
         if g.ok:
-            return {
+            location_data: LocationData = {
                 'latitude': g.lat,
                 'longitude': g.lng,
                 'city': g.city,
                 'country': g.country,
                 'region': g.state,
-                'timezone': g.timezone
+                'timezone': datetime.now().astimezone().tzname()
             }
+            return location_data
         
         # Fallback to system network information
         network_info = get_network_info()
@@ -120,7 +183,7 @@ def get_accurate_location():
         app.logger.error(f"Error getting location: {str(e)}")
         return None
 
-def get_network_info():
+def get_network_info() -> Optional[NetworkInfo]:
     """Get network information using psutil"""
     try:
         net_io = psutil.net_io_counters()
@@ -132,13 +195,14 @@ def get_network_info():
             'error_in': net_io.errin,
             'error_out': net_io.errout,
             'drop_in': net_io.dropin,
-            'drop_out': net_io.dropout
+            'drop_out': net_io.dropout,
+            'interfaces': get_network_interfaces()
         }
     except Exception as e:
         app.logger.error(f"Error getting network info: {str(e)}")
         return None
 
-def run_speed_test():
+def run_speed_test() -> Optional[Dict[str, Any]]:
     """Run a more accurate speed test"""
     try:
         # Get best server
@@ -169,7 +233,6 @@ def run_speed_test():
         return None
 
 @app.route('/')
-@limiter.limit("30 per minute")
 def index():
     try:
         client_ip = request.remote_addr
@@ -180,14 +243,12 @@ def index():
         raise
 
 @app.route('/room/<room_id>')
-@limiter.limit("30 per minute")
 def room(room_id):
     if room_id not in rooms:
         return render_template('index.html', error="Room not found")
     return render_template('index.html')
 
 @app.route('/api/ip')
-@limiter.limit("60 per minute")
 def get_ip():
     return jsonify({
         'ip': request.remote_addr,
@@ -371,12 +432,27 @@ def speed_test():
         return jsonify(results)
     return jsonify({'error': 'Speed test failed'}), 500
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                             'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 if __name__ == '__main__':
     try:
         port = int(os.environ.get('PORT', 5000))
-        logger.info(f"Starting server on port {port}")
-        # Use host='0.0.0.0' to make the server accessible from other devices
-        socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
+        # Try to find an available port
+        while True:
+            try:
+                logger.info(f"Starting server on port {port}")
+                # Use host='0.0.0.0' to make the server accessible from other devices
+                socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
+                break
+            except OSError as e:
+                if e.errno == 10048:  # Port already in use
+                    logger.warning(f"Port {port} is in use, trying port {port + 1}")
+                    port += 1
+                else:
+                    raise
     except Exception as e:
         logger.error(f"Failed to start server: {str(e)}")
         raise 

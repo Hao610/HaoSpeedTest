@@ -1,13 +1,13 @@
 services:
   - type: web
-    name: haospeedtest
+    name: HaoSpeedTest
     env: python
-    buildCommand: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: gunicorn --worker-class gevent --workers 1 --threads 1 --timeout 30 app:app
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --config gunicorn_config.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
     healthCheckPath: /
     autoDeploy: true 
