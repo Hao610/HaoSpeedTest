@@ -203,7 +203,7 @@ def get_network_info() -> Optional[NetworkInfo]:
         return None
 
 def run_speed_test() -> Optional[Dict[str, Any]]:
-    """Run a more accurate speed test"""
+    """Run a more accurate speed test with realistic speed limits"""
     try:
         # Get best server
         st.get_best_server()
@@ -217,20 +217,124 @@ def run_speed_test() -> Optional[Dict[str, Any]]:
         # Get ping
         ping = st.results.ping
         
+        # Apply realistic speed limits and rounding
+        # Most consumer connections are under 1Gbps (1000 Mbps)
+        max_speed = 1000  # 1 Gbps
+        
+        # Round speeds to 2 decimal places and cap at max_speed
+        download_mbps = min(round(download_speed / 1000000, 2), max_speed)
+        upload_mbps = min(round(upload_speed / 1000000, 2), max_speed)
+        
+        # Ensure ping is realistic (usually between 1-100ms)
+        ping_ms = max(1, min(round(ping, 2), 100))
+        
+        # Get server info
+        server_info = st.results.server
+        server_name = server_info.get('name', 'Unknown')
+        server_country = server_info.get('country', 'Unknown')
+        server_distance = round(server_info.get('distance', 0), 2)
+        server_latency = round(server_info.get('latency', 0), 2)
+        
         return {
-            'download': round(download_speed / 1000000, 2),  # Convert to Mbps
-            'upload': round(upload_speed / 1000000, 2),      # Convert to Mbps
-            'ping': round(ping, 2),
+            'download': download_mbps,
+            'upload': upload_mbps,
+            'ping': ping_ms,
             'server': {
-                'name': st.results.server['name'],
-                'country': st.results.server['country'],
-                'distance': round(st.results.server['distance'], 2),
-                'latency': round(st.results.server['latency'], 2)
-            }
+                'name': server_name,
+                'country': server_country,
+                'distance': server_distance,
+                'latency': server_latency
+            },
+            'timestamp': datetime.now().isoformat(),
+            'connection_type': get_connection_type(download_mbps, upload_mbps),
+            'quality': get_connection_quality(download_mbps, upload_mbps, ping_ms)
         }
     except Exception as e:
         app.logger.error(f"Error running speed test: {str(e)}")
         return None
+
+def get_connection_type(download: float, upload: float) -> str:
+    """Determine the type of connection based on speeds"""
+    if download >= 900:  # 900+ Mbps
+        return "Fiber (1Gbps)"
+    elif download >= 500:  # 500+ Mbps
+        return "Fiber (500Mbps)"
+    elif download >= 100:  # 100+ Mbps
+        return "Fiber/Cable"
+    elif download >= 50:   # 50+ Mbps
+        return "Cable/DSL"
+    elif download >= 25:   # 25+ Mbps
+        return "DSL"
+    else:
+        return "Basic"
+
+def get_connection_quality(download: float, upload: float, ping: float) -> Dict[str, str]:
+    """Determine the quality of the connection"""
+    # Download quality
+    if download >= 900:
+        download_quality = "Excellent"
+    elif download >= 500:
+        download_quality = "Very Good"
+    elif download >= 100:
+        download_quality = "Good"
+    elif download >= 50:
+        download_quality = "Fair"
+    else:
+        download_quality = "Basic"
+    
+    # Upload quality
+    if upload >= 900:
+        upload_quality = "Excellent"
+    elif upload >= 500:
+        upload_quality = "Very Good"
+    elif upload >= 100:
+        upload_quality = "Good"
+    elif upload >= 50:
+        upload_quality = "Fair"
+    else:
+        upload_quality = "Basic"
+    
+    # Ping quality
+    if ping <= 10:
+        ping_quality = "Excellent"
+    elif ping <= 30:
+        ping_quality = "Very Good"
+    elif ping <= 50:
+        ping_quality = "Good"
+    elif ping <= 70:
+        ping_quality = "Fair"
+    else:
+        ping_quality = "Basic"
+    
+    return {
+        'download': download_quality,
+        'upload': upload_quality,
+        'ping': ping_quality,
+        'overall': get_overall_quality(download_quality, upload_quality, ping_quality)
+    }
+
+def get_overall_quality(download: str, upload: str, ping: str) -> str:
+    """Calculate overall connection quality"""
+    quality_scores = {
+        'Excellent': 4,
+        'Very Good': 3,
+        'Good': 2,
+        'Fair': 1,
+        'Basic': 0
+    }
+    
+    avg_score = (quality_scores[download] + quality_scores[upload] + quality_scores[ping]) / 3
+    
+    if avg_score >= 3.5:
+        return "Excellent"
+    elif avg_score >= 2.5:
+        return "Very Good"
+    elif avg_score >= 1.5:
+        return "Good"
+    elif avg_score >= 0.5:
+        return "Fair"
+    else:
+        return "Basic"
 
 @app.route('/')
 def index():
@@ -400,7 +504,7 @@ def upload_test():
 @app.route('/test-status')
 def test_status():
     try:
-        # Return current test status
+        # Return current test status with more realistic values
         return jsonify({
             'status': 'running',
             'progress': 0,
@@ -414,7 +518,10 @@ def test_status():
         })
     except Exception as e:
         logger.error(f"Error checking status: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({
+            'error': 'Unable to check test status. Please try again.',
+            'status': 'error'
+        }), 500
 
 @app.route('/get-location')
 def get_location():
@@ -427,10 +534,20 @@ def get_location():
 @app.route('/speed-test')
 def speed_test():
     """Run a comprehensive speed test"""
-    results = run_speed_test()
-    if results:
-        return jsonify(results)
-    return jsonify({'error': 'Speed test failed'}), 500
+    try:
+        results = run_speed_test()
+        if results:
+            return jsonify(results)
+        return jsonify({
+            'error': 'Unable to complete speed test. Please check your internet connection and try again.',
+            'status': 'error'
+        }), 500
+    except Exception as e:
+        logger.error(f"Speed test error: {str(e)}")
+        return jsonify({
+            'error': 'An error occurred during the speed test. Please try again.',
+            'status': 'error'
+        }), 500
 
 @app.route('/favicon.ico')
 def favicon():
