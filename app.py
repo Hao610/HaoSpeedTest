@@ -212,78 +212,39 @@ def get_network_info() -> Optional[NetworkInfo]:
         return None
 
 def run_speed_test() -> Optional[Dict[str, Any]]:
-    """Run a comprehensive speed test with accurate measurements"""
+    """Run a simple speed test with basic measurements"""
     try:
-        # Initialize speedtest with specific server
+        # Initialize speedtest
         st = speedtest.Speedtest()
         
-        # Get best server automatically
+        # Get best server
         st.get_best_server()
         
-        # Test download speed with multiple threads
-        download_speed = st.download(threads=4)
+        # Test download speed
+        download_speed = st.download()
         
-        # Test upload speed with multiple threads
-        upload_speed = st.upload(threads=4)
+        # Test upload speed
+        upload_speed = st.upload()
         
-        # Get ping and jitter
+        # Get ping
         ping = st.results.ping
-        jitter = st.results.jitter
         
-        # Get network information
-        network_info = get_network_info()
-        
-        # Get accurate location
-        location = get_accurate_location()
-        
-        # Calculate packet loss
-        packet_loss = calculate_packet_loss()
-        
-        # Calculate buffer bloat
-        buffer_bloat = calculate_buffer_bloat()
-        
-        # Calculate DNS latency
-        dns_latency = calculate_dns_latency()
-        
-        # Get network topology
-        topology = get_network_topology()
-        
-        # Get AI insights
-        insights = get_ai_insights(download_speed, upload_speed, ping, jitter, packet_loss)
-        
-        # Convert speeds to Mbps with high precision
+        # Convert speeds to Mbps
         download_mbps = round(download_speed / 1000000, 2)
         upload_mbps = round(upload_speed / 1000000, 2)
         
         # Get server info
         server_info = st.results.server
         
-        # Validate the results
-        if download_mbps <= 0 or upload_mbps <= 0 or ping <= 0:
-            raise ValueError("Invalid speed test results")
-        
         return {
             'download': download_mbps,
             'upload': upload_mbps,
             'ping': round(ping, 2),
-            'jitter': round(jitter, 2),
-            'packet_loss': packet_loss,
-            'buffer_bloat': buffer_bloat,
-            'dns_latency': dns_latency,
             'server': {
                 'name': server_info.get('name', 'Unknown'),
                 'country': server_info.get('country', 'Unknown'),
-                'distance': round(server_info.get('distance', 0), 2),
-                'latency': round(server_info.get('latency', 0), 2)
+                'distance': round(server_info.get('distance', 0), 2)
             },
-            'network': {
-                'type': get_network_type(),
-                'signal_strength': get_signal_strength(),
-                'protocol': get_network_protocol(),
-                'topology': topology
-            },
-            'location': location,
-            'insights': insights,
             'timestamp': datetime.now().isoformat()
         }
     except Exception as e:
@@ -645,13 +606,13 @@ def get_location():
 
 @app.route('/speed-test')
 def speed_test():
-    """Run a comprehensive speed test"""
+    """Run a simple speed test"""
     try:
         results = run_speed_test()
         if results:
             return jsonify(results)
         return jsonify({
-            'error': 'Unable to complete speed test. Please check your internet connection and try again.',
+            'error': 'Unable to complete speed test. Please try again.',
             'status': 'error'
         }), 500
     except Exception as e:
