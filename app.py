@@ -157,7 +157,24 @@ def get_network_interfaces() -> Dict[str, Dict[str, str]]:
 def get_accurate_location() -> Optional[LocationData]:
     """Get accurate location using multiple methods"""
     try:
-        # Try IP-based geolocation first
+        # First try to get location from speedtest server
+        st = speedtest.Speedtest()
+        st.get_best_server()
+        server_info = st.results.server
+        
+        if server_info and 'country' in server_info and 'name' in server_info:
+            # Use the speedtest server's location as it's more accurate
+            location_data: LocationData = {
+                'latitude': server_info.get('lat', 0),
+                'longitude': server_info.get('lon', 0),
+                'city': server_info.get('name', 'Unknown'),
+                'country': server_info.get('country', 'Unknown'),
+                'region': server_info.get('region', 'Unknown'),
+                'timezone': datetime.now().astimezone().tzname()
+            }
+            return location_data
+        
+        # Fallback to IP-based geolocation
         g = geocoder.ip('me')
         if g.ok:
             location_data: LocationData = {
@@ -169,11 +186,6 @@ def get_accurate_location() -> Optional[LocationData]:
                 'timezone': datetime.now().astimezone().tzname()
             }
             return location_data
-        
-        # Fallback to system network information
-        network_info = get_network_info()
-        if network_info and 'location' in network_info:
-            return network_info['location']
             
         return None
     except Exception as e:
@@ -245,6 +257,10 @@ def run_speed_test() -> Optional[Dict[str, Any]]:
         
         # Get server info
         server_info = st.results.server
+        
+        # Validate the results
+        if download_mbps <= 0 or upload_mbps <= 0 or ping <= 0:
+            raise ValueError("Invalid speed test results")
         
         return {
             'download': download_mbps,
@@ -612,10 +628,20 @@ def test_status():
 @app.route('/get-location')
 def get_location():
     """Get accurate location information"""
-    location = get_accurate_location()
-    if location:
-        return jsonify(location)
-    return jsonify({'error': 'Could not determine location'}), 500
+    try:
+        location = get_accurate_location()
+        if location:
+            return jsonify(location)
+        return jsonify({
+            'error': 'Could not determine location. Please try again.',
+            'status': 'error'
+        }), 500
+    except Exception as e:
+        logger.error(f"Location error: {str(e)}")
+        return jsonify({
+            'error': 'An error occurred while getting location. Please try again.',
+            'status': 'error'
+        }), 500
 
 @app.route('/speed-test')
 def speed_test():
